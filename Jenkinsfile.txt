@@ -1,0 +1,69 @@
+
+pipeline {
+
+    agent any
+
+    stages {
+
+        stage('Checkout Source Code') {
+            steps {
+                echo 'Retrieving source code from GitHub'
+
+                git branch: 'main',
+                    url: 'https://github.com/USERNAME/html-jenkins-project.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Building HTML application'
+
+                sh '''
+                    mkdir -p build
+                    cp index.html style.css script.js build/
+                '''
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo 'Checking application files'
+
+                sh '''
+                    test -f build/index.html
+                    test -f build/style.css
+                    test -f build/script.js
+                '''
+            }
+        }
+
+        stage('Generate Artifact') {
+            steps {
+                echo 'Generating ZIP artifact'
+
+                sh 'zip -r html-application.zip build/'
+            }
+        }
+
+        stage('Archive Artifact') {
+            steps {
+                echo 'Archiving application artifact'
+
+                archiveArtifacts(
+                    artifacts: 'html-application.zip',
+                    fingerprint: true
+                )
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'BUILD SUCCESSFUL'
+        }
+
+        failure {
+            echo 'BUILD FAILED'
+        }
+    }
+}
